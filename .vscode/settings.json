@@ -1,0 +1,7 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "python.pythonPath": "/Users/shaoyuliang/.virtualenvs/coverage/bin/python",
+    "python.autoComplete.extraPaths": [
+        "/Users/shaoyuliang/.virtualenvs/coverage/lib/python2.7/site-packages"
+    ]
+}
