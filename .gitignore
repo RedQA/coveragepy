@@ -1,3 +1,5 @@
-./coverage.egg-info/
-./build/
-./coverage/tracer.so
+coverage.egg-info/
+build/
+tracer.so
+.coverage
+*.pyc

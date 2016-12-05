@@ -61,7 +61,6 @@ class PyTracer(object):
 
     def _trace(self, frame, event, arg_unused):
         """The trace function passed to sys.settrace."""
-        print "current data is ", self.data
         if self.stopped:
             return
 
@@ -88,7 +87,8 @@ class PyTracer(object):
             if disp.trace:
                 tracename = disp.source_filename
                 if tracename not in self.data:
-                    self.data[tracename] = {}
+                    from coverage.newdict import RedisDict
+                    self.data[tracename] = RedisDict()
                 self.cur_file_dict = self.data[tracename]
             # The call event is really a "start frame" event, and happens for
             # function calls and re-entering generators.  The f_lasti field is
@@ -99,7 +99,6 @@ class PyTracer(object):
             else:
                 self.last_line = frame.f_lineno
         elif event == 'line':
-            print "current_file", self.cur_file_dict
             # Record an executed line.
             if self.cur_file_dict is not None:
                 lineno = frame.f_lineno

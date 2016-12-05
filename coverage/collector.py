@@ -147,6 +147,7 @@ class Collector(object):
             # Being fast: use the C Tracer if it is available, else the Python
             # trace function.
             self._trace_class = CTracer or PyTracer
+            print self._trace_class
 
         if self._trace_class is CTracer:
             self.file_disposition_class = CFileDisposition
@@ -167,7 +168,8 @@ class Collector(object):
         # A dictionary mapping file names to dicts with line number keys (if not
         # branch coverage), or mapping file names to dicts with line number
         # pairs as keys (if branch coverage).
-        self.data = {}
+        from coverage.newdict import RedisDict
+        self.data = RedisDict()
 
         # A dict mapping contexts to data dictionaries.
         self.contexts = {}
@@ -212,6 +214,7 @@ class Collector(object):
         """Start a new Tracer object, and store it in self.tracers."""
         tracer = self._trace_class()
         tracer.data = self.data
+        print dir(tracer)
         tracer.trace_arcs = self.branch
         tracer.should_trace = self.should_trace
         tracer.should_trace_cache = self.should_trace_cache
