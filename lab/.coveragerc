@@ -1,4 +1,6 @@
 [xhs]
-redis_host = locfdafsdfalhost
-redis_db = test
+redis_host = localhost
+redis_port = 6379
+redis_db = 0
+project_root = /Users/shaoyuliang/xiaohongshu/code/github/coveragepy
 

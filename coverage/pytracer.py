@@ -9,6 +9,7 @@ import sys
 from coverage import env
 from coverage.newdict import RedisDict
 
+import time
 # We need the YIELD_VALUE opcode below, in a comparison-friendly form.
 YIELD_VALUE = dis.opmap['YIELD_VALUE']
 if env.PY2:
@@ -66,6 +67,10 @@ class PyTracer(object):
             return
 
         if self.last_exc_back:
+            # dump the current trace data
+            if self.cur_file_dict and isinstance(self.cur_file_dict, RedisDict):
+                self.cur_file_dict.flush_pipe()
+
             if frame == self.last_exc_back:
                 # Someone forgot a return event.
                 if self.trace_arcs and self.cur_file_dict:
@@ -116,8 +121,12 @@ class PyTracer(object):
                 if bytecode != YIELD_VALUE:
                     first = frame.f_code.co_firstlineno
                     self.cur_file_dict[(self.last_line, -first)] = None
+            # dump the current trace data
+            if self.cur_file_dict and isinstance(self.cur_file_dict, RedisDict):
+                self.cur_file_dict.flush_pipe()
             # Leaving this function, pop the filename stack.
             self.cur_file_dict, self.last_line = self.data_stack.pop()
+
         elif event == 'exception':
             self.last_exc_back = frame.f_back
             self.last_exc_firstlineno = frame.f_code.co_firstlineno

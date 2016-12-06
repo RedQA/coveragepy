@@ -243,7 +243,7 @@ class Coverage(object):
             branch=self.config.branch,
             warn=self._warn,
             concurrency=concurrency,
-            covconfig=self.config
+            covconfig=self.config,
         )
 
         # Early warning if we aren't going to be able to support plugins.

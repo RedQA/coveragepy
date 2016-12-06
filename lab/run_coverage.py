@@ -8,9 +8,9 @@ def method_for_cover():
     import time
     ctime = time.time()
     if ctime % 2 == 0:
-        print "Hello Red"
+        return "Hello Red"
     else:
-        print "Hello Blue"
+        return "Hello Blue"
 
 from coverage import Coverage
 coverage = Coverage()

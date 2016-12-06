@@ -69,7 +69,8 @@ class Collector(object):
     # The concurrency settings we support here.
     SUPPORTED_CONCURRENCIES = set(["greenlet", "eventlet", "gevent", "thread"])
 
-    def __init__(self, should_trace, check_include, timid, branch, warn, concurrency, covconfig=None):
+    def __init__(self, should_trace, check_include, timid, branch, warn, concurrency,
+                 covconfig=None):
         """Create a collector.
 
         `should_trace` is a function, taking a file name, and returning a

@@ -198,7 +198,8 @@ class CoverageConfig(object):
         # Options from xiaohongshu
         self.xhs_redis_host = "localhost"
         self.xhs_redis_port = 6379
-        self.xhs_redis_db = "test"
+        self.xhs_redis_db = "0"
+        self.xhs_project_root = "/xiaohongshu"
 
     MUST_BE_LIST = ["omit", "include", "debug", "plugins", "concurrency"]
 
@@ -326,7 +327,8 @@ class CoverageConfig(object):
         # [xhs]
         ('xhs_redis_host', 'xhs:redis_host'),
         ('xhs_redis_port', 'xhs:redis_port'),
-        ('xhs_redis_db', 'xhs:redis_db')
+        ('xhs_redis_db', 'xhs:redis_db'),
+        ('xhs_project_root', 'xhs:project_root')
     ]
 
     def _set_attr_from_config_option(self, cp, attr, where, type_=''):
