@@ -7,6 +7,7 @@ import dis
 import sys
 
 from coverage import env
+from coverage.newdict import RedisDict
 
 # We need the YIELD_VALUE opcode below, in a comparison-friendly form.
 YIELD_VALUE = dis.opmap['YIELD_VALUE']
@@ -87,7 +88,7 @@ class PyTracer(object):
             if disp.trace:
                 tracename = disp.source_filename
                 if tracename not in self.data:
-                    from coverage.newdict import RedisDict
+                    # change to RedisDict
                     self.data[tracename] = RedisDict()
                 self.cur_file_dict = self.data[tracename]
             # The call event is really a "start frame" event, and happens for

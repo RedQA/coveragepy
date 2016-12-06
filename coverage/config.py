@@ -59,10 +59,12 @@ class HandyConfigParser(configparser.RawConfigParser):
         """
         section = self.section_prefix + section
         v = configparser.RawConfigParser.get(self, section, *args, **kwargs)
+
         def dollar_replace(m):
             """Called for each $replacement."""
             # Only one of the groups will have matched, just get its text.
-            word = next(w for w in m.groups() if w is not None)     # pragma: part covered
+            word = next(w for w in m.groups()
+                        if w is not None)     # pragma: part covered
             if word == "$":
                 return "$"
             else:
@@ -113,7 +115,8 @@ class HandyConfigParser(configparser.RawConfigParser):
                 re.compile(value)
             except re.error as e:
                 raise CoverageException(
-                    "Invalid [%s].%s value %r: %s" % (section, option, value, e)
+                    "Invalid [%s].%s value %r: %s" % (
+                        section, option, value, e)
                 )
             if value:
                 value_list.append(value)
@@ -146,6 +149,7 @@ class CoverageConfig(object):
     operation of coverage.py.
 
     """
+
     def __init__(self):
         """Initialize the configuration attributes to their defaults."""
         # Metadata about the config.
@@ -191,6 +195,11 @@ class CoverageConfig(object):
         # Options for plugins
         self.plugin_options = {}
 
+        # Options from xiaohongshu
+        self.xhs_redis_host = "localhost"
+        self.xhs_redis_port = 6379
+        self.xhs_redis_db = "test"
+
     MUST_BE_LIST = ["omit", "include", "debug", "plugins", "concurrency"]
 
     def from_args(self, **kwargs):
@@ -217,7 +226,8 @@ class CoverageConfig(object):
         try:
             files_read = cp.read(filename)
         except configparser.Error as err:
-            raise CoverageException("Couldn't read config file %s: %s" % (filename, err))
+            raise CoverageException(
+                "Couldn't read config file %s: %s" % (filename, err))
         if not files_read:
             return False
 
@@ -230,14 +240,14 @@ class CoverageConfig(object):
                 if was_set:
                     any_set = True
         except ValueError as err:
-            raise CoverageException("Couldn't read config file %s: %s" % (filename, err))
+            raise CoverageException(
+                "Couldn't read config file %s: %s" % (filename, err))
 
         # Check that there are no unrecognized options.
         all_options = collections.defaultdict(set)
         for option_spec in self.CONFIG_FILE_OPTIONS:
             section, option = option_spec[1].split(":")
             all_options[section].add(option)
-
         for section, options in iitems(all_options):
             if cp.has_section(section):
                 for unknown in set(cp.options(section)) - options:
@@ -312,6 +322,11 @@ class CoverageConfig(object):
         # [xml]
         ('xml_output', 'xml:output'),
         ('xml_package_depth', 'xml:package_depth', 'int'),
+
+        # [xhs]
+        ('xhs_redis_host', 'xhs:redis_host'),
+        ('xhs_redis_port', 'xhs:redis_port'),
+        ('xhs_redis_db', 'xhs:redis_db')
     ]
 
     def _set_attr_from_config_option(self, cp, attr, where, type_=''):
@@ -417,13 +432,14 @@ def read_coverage_config(config_file, **kwargs):
             config_file = ".coveragerc"         # pylint: disable=redefined-variable-type
 
         for fname, prefix in [(config_file, ""),
-                                ("setup.cfg", "coverage:"),
-                                ("tox.ini", "coverage:")]:
+                              ("setup.cfg", "coverage:"),
+                              ("tox.ini", "coverage:")]:
             config_read = config.from_file(fname, section_prefix=prefix)
             is_config_file = fname == config_file
 
             if not config_read and is_config_file and specified_file:
-                raise CoverageException("Couldn't read '%s' as a config file" % fname)
+                raise CoverageException(
+                    "Couldn't read '%s' as a config file" % fname)
 
             if config_read:
                 break

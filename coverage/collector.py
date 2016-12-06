@@ -27,7 +27,8 @@ except ImportError:
         # it, then exit quickly and clearly instead of dribbling confusing
         # errors. I'm using sys.exit here instead of an exception because an
         # exception here causes all sorts of other noise in unittest.
-        sys.stderr.write("*** COVERAGE_TEST_TRACER is 'c' but can't import CTracer!\n")
+        sys.stderr.write(
+            "*** COVERAGE_TEST_TRACER is 'c' but can't import CTracer!\n")
         sys.exit(1)
     CTracer = None
 
@@ -68,7 +69,7 @@ class Collector(object):
     # The concurrency settings we support here.
     SUPPORTED_CONCURRENCIES = set(["greenlet", "eventlet", "gevent", "thread"])
 
-    def __init__(self, should_trace, check_include, timid, branch, warn, concurrency):
+    def __init__(self, should_trace, check_include, timid, branch, warn, concurrency, covconfig=None):
         """Create a collector.
 
         `should_trace` is a function, taking a file name, and returning a
@@ -94,6 +95,8 @@ class Collector(object):
         (the default).  Of these four values, only one can be supplied.  Other
         values are ignored.
 
+        `covconfig` is the ConverageConfig instance send from the outside caller
+
         """
         self.should_trace = should_trace
         self.check_include = check_include
@@ -103,10 +106,15 @@ class Collector(object):
 
         self.concur_id_func = None
 
+        # add by mark
+        self.covconfig = covconfig
+
         # We can handle a few concurrency options here, but only one at a time.
-        these_concurrencies = self.SUPPORTED_CONCURRENCIES.intersection(concurrency)
+        these_concurrencies = self.SUPPORTED_CONCURRENCIES.intersection(
+            concurrency)
         if len(these_concurrencies) > 1:
-            raise CoverageException("Conflicting concurrency settings: %s" % concurrency)
+            raise CoverageException(
+                "Conflicting concurrency settings: %s" % concurrency)
         self.concurrency = these_concurrencies.pop() if these_concurrencies else ''
 
         try:
@@ -126,7 +134,8 @@ class Collector(object):
                 import threading
                 self.threading = threading
             else:
-                raise CoverageException("Don't understand concurrency=%s" % concurrency)
+                raise CoverageException(
+                    "Don't understand concurrency=%s" % concurrency)
         except ImportError:
             raise CoverageException(
                 "Couldn't trace with concurrency=%s, the module isn't installed." % (
@@ -146,8 +155,8 @@ class Collector(object):
         else:
             # Being fast: use the C Tracer if it is available, else the Python
             # trace function.
-            self._trace_class = CTracer or PyTracer
-            print self._trace_class
+            # self._trace_class = CTracer or PyTracer
+            self._trace_class = PyTracer
 
         if self._trace_class is CTracer:
             self.file_disposition_class = CFileDisposition
@@ -169,7 +178,7 @@ class Collector(object):
         # branch coverage), or mapping file names to dicts with line number
         # pairs as keys (if branch coverage).
         from coverage.newdict import RedisDict
-        self.data = RedisDict()
+        self.data = RedisDict(covconfig=self.covconfig)
 
         # A dict mapping contexts to data dictionaries.
         self.contexts = {}
@@ -214,7 +223,6 @@ class Collector(object):
         """Start a new Tracer object, and store it in self.tracers."""
         tracer = self._trace_class()
         tracer.data = self.data
-        print dir(tracer)
         tracer.trace_arcs = self.branch
         tracer.should_trace = self.should_trace
         tracer.should_trace_cache = self.should_trace_cache
@@ -297,7 +305,8 @@ class Collector(object):
             try:
                 fn(frame, event, arg, lineno=lineno)
             except TypeError:
-                raise Exception("fullcoverage must be run with the C trace function.")
+                raise Exception(
+                    "fullcoverage must be run with the C trace function.")
 
         # Install our installation tracer in threading, to jump start other
         # threads.
@@ -308,7 +317,8 @@ class Collector(object):
         """Stop collecting trace information."""
         assert self._collectors
         assert self._collectors[-1] is self, (
-            "Expected current collector to be %r, but it's %r" % (self, self._collectors[-1])
+            "Expected current collector to be %r, but it's %r" % (
+                self, self._collectors[-1])
         )
 
         self.pause()

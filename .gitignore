@@ -3,3 +3,4 @@ build/
 tracer.so
 .coverage
 *.pyc
+.coverage_rc

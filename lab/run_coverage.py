@@ -15,6 +15,8 @@ def method_for_cover():
 from coverage import Coverage
 coverage = Coverage()
 coverage.start()
+from lab.submodule.submod import method_sub_module
+method_sub_module()
 method_for_cover()
 coverage.stop()
 coverage.save()

@@ -65,6 +65,7 @@ class Coverage(object):
         cov.html_report(directory='covhtml')
 
     """
+
     def __init__(
         self, data_file=None, data_suffix=None, cover_pylib=None,
         auto_data=False, timid=None, branch=None, config_file=True,
@@ -138,7 +139,7 @@ class Coverage(object):
             branch=branch, parallel=bool_or_none(data_suffix),
             source=source, omit=omit, include=include, debug=debug,
             concurrency=concurrency,
-            )
+        )
 
         self._debug_file = None
         self._auto_load = self._auto_save = auto_data
@@ -206,7 +207,8 @@ class Coverage(object):
         self.debug = DebugControl(self.config.debug, self._debug_file)
 
         # Load plugins
-        self.plugins = Plugins.load_plugins(self.config.plugins, self.config, self.debug)
+        self.plugins = Plugins.load_plugins(
+            self.config.plugins, self.config, self.debug)
 
         # _exclude_re is a dict that maps exclusion list names to compiled
         # regexes.
@@ -241,7 +243,8 @@ class Coverage(object):
             branch=self.config.branch,
             warn=self._warn,
             concurrency=concurrency,
-            )
+            covconfig=self.config
+        )
 
         # Early warning if we aren't going to be able to support plugins.
         if self.plugins.file_tracers and not self.collector.supports_plugins:
@@ -249,11 +252,11 @@ class Coverage(object):
                 "Plugin file tracers (%s) aren't supported with %s" % (
                     ", ".join(
                         plugin._coverage_plugin_name
-                            for plugin in self.plugins.file_tracers
-                        ),
+                        for plugin in self.plugins.file_tracers
+                    ),
                     self.collector.tracer_name(),
-                    )
                 )
+            )
             for plugin in self.plugins.file_tracers:
                 plugin._coverage_enabled = False
 
@@ -278,7 +281,8 @@ class Coverage(object):
             basename=self.config.data_file, warn=self._warn, debug=self.debug,
         )
 
-        # The directories for files considered "installed with the interpreter".
+        # The directories for files considered "installed with the
+        # interpreter".
         self.pylib_dirs = set()
         if not self.config.cover_pylib:
             # Look at where some standard modules are located. That's the
@@ -436,7 +440,8 @@ class Coverage(object):
 
         """
         original_filename = filename
-        disp = _disposition_init(self.collector.file_disposition_class, filename)
+        disp = _disposition_init(
+            self.collector.file_disposition_class, filename)
 
         def nope(disp, reason):
             """Simple helper to make it easy to return NO."""
@@ -827,7 +832,8 @@ class Coverage(object):
                 ):
                     self._warn("Module %s has no Python source." % pkg)
                 else:
-                    self._warn("Module %s was previously imported, but not measured." % pkg)
+                    self._warn(
+                        "Module %s was previously imported, but not measured." % pkg)
 
         # Find out if we got any data.
         if not self.data and self._warn_no_data:
@@ -882,7 +888,7 @@ class Coverage(object):
             sorted(analysis.excluded),
             sorted(analysis.missing),
             analysis.missing_formatted(),
-            )
+        )
 
     def _analyze(self, it):
         """Analyze a single morf or code unit.
@@ -968,7 +974,7 @@ class Coverage(object):
         self.config.from_args(
             ignore_errors=ignore_errors, omit=omit, include=include,
             show_missing=show_missing, skip_covered=skip_covered,
-            )
+        )
         reporter = SummaryReporter(self, self.config)
         return reporter.report(morfs, outfile=file)
 
@@ -989,7 +995,7 @@ class Coverage(object):
         self.get_data()
         self.config.from_args(
             ignore_errors=ignore_errors, omit=omit, include=include
-            )
+        )
         reporter = AnnotateReporter(self, self.config)
         reporter.report(morfs, directory=directory)
 
@@ -1016,7 +1022,7 @@ class Coverage(object):
         self.config.from_args(
             ignore_errors=ignore_errors, omit=omit, include=include,
             html_dir=directory, extra_css=extra_css, html_title=title,
-            )
+        )
         reporter = HtmlReporter(self, self.config)
         return reporter.report(morfs)
 
@@ -1040,7 +1046,7 @@ class Coverage(object):
         self.config.from_args(
             ignore_errors=ignore_errors, omit=omit, include=include,
             xml_output=outfile,
-            )
+        )
         file_to_close = None
         delete_file = False
         if self.config.xml_output:
@@ -1107,13 +1113,13 @@ class Coverage(object):
                 if k.startswith(("COV", "PY"))
             )),
             ('command_line', " ".join(getattr(sys, 'argv', ['???']))),
-            ]
+        ]
 
         matcher_names = [
             'source_match', 'source_pkgs_match',
             'include_match', 'omit_match',
             'cover_match', 'pylib_match',
-            ]
+        ]
 
         for matcher_name in matcher_names:
             matcher = getattr(self, matcher_name)
