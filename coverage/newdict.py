@@ -65,7 +65,6 @@ class RedisDict(dict):
                 item.init_redis()
                 item.tracename = key
         else:
-            print self.tracename
             self.pipeline.sadd(self.tracename, key)
         super(RedisDict, self).__setitem__(key, item)
 
