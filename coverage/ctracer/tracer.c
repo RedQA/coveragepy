@@ -1085,6 +1085,10 @@ CTracer_members[] = {
     { "switch_context",     T_OBJECT, offsetof(CTracer, switch_context), 0,
             PyDoc_STR("Function for switch to a new context.") },
 
+    /* Add by mark */
+    { "config",     T_OBJECT, offsetof(CTracer, switch_context), 0,
+            PyDoc_STR("Global coverage config.") },
+
     { NULL }
 };
 
