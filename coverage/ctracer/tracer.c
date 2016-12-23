@@ -134,7 +134,7 @@ indent(int n)
     return spaces + strlen(spaces) - n * 2;
 }
 
-static BOOL logging = FALSE;
+static BOOL logging = TRUE;
 /* Set these constants to be a file substring and line number to start logging. */
 static const char *start_file = "tests/views";
 static int start_line = 27;
@@ -189,7 +189,9 @@ CTracer_record_pair(CTracer *self, int l1, int l2)
     {
         goto error;
     }
-
+    /* 
+        self.data is a python dictionary here 
+    */
     if (PyDict_SetItem(self->cur_entry.file_data, t, Py_None) < 0)
     {
         goto error;
@@ -227,7 +229,7 @@ CTracer_set_pdata_stack(CTracer *self)
             }
             STATS(self->stats.pycalls++;)
             // create a weak dictionary for storing the index of the datastack list on each thread
-            // it is a weakreference 
+            // it is a weakreference
             self->data_stack_index = PyObject_CallMethod(weakref, "WeakKeyDictionary", NULL);
             Py_XDECREF(weakref);
 
@@ -751,11 +753,11 @@ static int
 CTracer_handle_line(CTracer *self, PyFrameObject *frame)
 {
 
-    // PyObject *ascii = NULL;
-    // ascii = MyText_AS_BYTES(frame->f_code->co_filename);
-    // printf("Begin %s \t", MyBytes_AS_STRING(ascii));
-    // printf("Begin %d\n", frame->f_lineno);
-    // Py_DECREF(ascii);
+    // Add by mark
+    PyObject *ascii = NULL;
+    char *filename;
+    char sadd_command[500] = {0};
+    char co_line[8] = {0};
 
     int ret = RET_ERROR;
     int ret2;
@@ -812,6 +814,20 @@ CTracer_handle_line(CTracer *self, PyFrameObject *frame)
                         {
                             goto error;
                         }
+
+                        // Add by Mark here
+                        ascii = MyText_AS_BYTES(frame->f_code->co_filename);
+                        filename = MyBytes_AS_STRING(ascii);
+                        sprintf(co_line, "%d", frame->f_lineno);
+                        strcat(sadd_command, "SADD ");
+                        strcat(sadd_command, filename);
+                        strcat(sadd_command, " ");
+                        strcat(sadd_command, co_line);
+                        redisReply *reply;
+                        reply = redisCommand(self->covRedis, sadd_command);
+                        freeReplyObject(reply);
+                        memset(sadd_command, 0, sizeof(sadd_command));
+                        memset(co_line, 0, sizeof(co_line));
 
                         ret2 = PyDict_SetItem(self->cur_entry.file_data, this_line, Py_None);
                         Py_DECREF(this_line);
@@ -1132,6 +1148,34 @@ done:
 static PyObject *
 CTracer_start(CTracer *self, PyObject *args_unused)
 {
+    //  Connect to the redis when we call the start
+
+    PyObject *ascii;
+    char *redis_host;
+    int redis_port;
+    char *redis_db;
+
+    // read redis config
+    ascii = MyText_AS_BYTES(PyObject_GetAttrString(self->config, "xhs_redis_host"));
+    redis_host = MyBytes_AS_STRING(ascii);
+
+    ascii = MyText_AS_BYTES(PyObject_GetAttrString(self->config, "xhs_redis_port"));
+    char *c_redis_port = MyBytes_AS_STRING(ascii);
+    redis_port = atoi(c_redis_port);
+
+    ascii = MyText_AS_BYTES(PyObject_GetAttrString(self->config, "xhs_redis_db"));
+    redis_db = MyBytes_AS_STRING(ascii);
+
+    self->covRedis = redisConnect(redis_host, redis_port);
+
+    // switch to the right redis database
+
+    char switch_db_cmd[11] = "SELECT ";
+    strcat(switch_db_cmd, redis_db);
+    redisReply *reply;
+    reply = redisCommand(self->covRedis, switch_db_cmd);
+    freeReplyObject(reply);
+
     PyEval_SetTrace((Py_tracefunc)CTracer_trace, (PyObject *)self);
     self->started = TRUE;
     self->tracing_arcs = self->trace_arcs && PyObject_IsTrue(self->trace_arcs);
@@ -1209,7 +1253,7 @@ static PyMemberDef
          PyDoc_STR("Function for switch to a new context.")},
 
         /* Add by mark */
-        {"config", T_OBJECT, offsetof(CTracer, switch_context), 0,
+        {"config", T_OBJECT, offsetof(CTracer, config), 0,
          PyDoc_STR("Global coverage config.")},
 
         {NULL}};

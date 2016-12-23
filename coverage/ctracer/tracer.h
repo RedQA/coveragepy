@@ -32,7 +32,8 @@ typedef struct CTracer {
     
     /* Add by Mark*/
     PyObject * config;
-
+    redisContext * covRedis;
+    
     /* Has the tracer been started? */
     BOOL started;
     /* Are we tracing arcs, or just lines? */
