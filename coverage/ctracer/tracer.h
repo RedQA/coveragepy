@@ -10,6 +10,7 @@
 #include "opcode.h"
 
 #include "datastack.h"
+#include "hiredis.h"
 
 /* The CTracer type. */
 
@@ -28,7 +29,11 @@ typedef struct CTracer {
     PyObject * should_start_context;
     PyObject * switch_context;
     PyObject * context;
-
+    
+    /* Add by Mark*/
+    PyObject * config;
+    redisContext * covRedis;
+    
     /* Has the tracer been started? */
     BOOL started;
     /* Are we tracing arcs, or just lines? */

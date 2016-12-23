@@ -156,8 +156,8 @@ class Collector(object):
         else:
             # Being fast: use the C Tracer if it is available, else the Python
             # trace function.
-            # self._trace_class = CTracer or PyTracer
-            self._trace_class = PyTracer
+            self._trace_class = CTracer or PyTracer
+            # self._trace_class = CTracer
 
         if self._trace_class is CTracer:
             self.file_disposition_class = CFileDisposition
@@ -249,7 +249,8 @@ class Collector(object):
                 tracer.should_start_context = should_start_context
             if hasattr(tracer, 'switch_context'):
                 tracer.switch_context = self.switch_context
-
+        # bind config to tracer
+        tracer.config = self.covconfig
         fn = tracer.start()
         self.tracers.append(tracer)
 

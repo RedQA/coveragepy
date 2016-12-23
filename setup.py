@@ -44,7 +44,8 @@ with open(cov_ver_py) as version_file:
     exec(compile(version_file.read(), cov_ver_py, 'exec'))
 
 with open("README.rst") as readme:
-    long_description = readme.read().replace("http://coverage.readthedocs.io", __url__)
+    long_description = readme.read().replace(
+        "http://coverage.readthedocs.io", __url__)
 
 classifier_list = classifiers.splitlines()
 
@@ -112,9 +113,11 @@ if sys.platform == 'win32':
 
 class BuildFailed(Exception):
     """Raise this to indicate the C extension wouldn't build."""
+
     def __init__(self):
         Exception.__init__(self)
-        self.cause = sys.exc_info()[1]      # work around py 2/3 different syntax
+        # work around py 2/3 different syntax
+        self.cause = sys.exc_info()[1]
 
 
 class ve_build_ext(build_ext):
@@ -164,8 +167,16 @@ if compile_extension:
                     "coverage/ctracer/filedisp.c",
                     "coverage/ctracer/module.c",
                     "coverage/ctracer/tracer.c",
+                    "coverage/vendor/hiredis/async.c",
+                    "coverage/vendor/hiredis/dict.c",
+                    "coverage/vendor/hiredis/hiredis.c",
+                    "coverage/vendor/hiredis/net.c",
+                    "coverage/vendor/hiredis/read.c",
+                    "coverage/vendor/hiredis/sds.c"
                 ],
-            ),
+
+                # add redis include
+                include_dirs=["coverage/vendor/hiredis"]),
         ],
         cmdclass={
             'build_ext': ve_build_ext,

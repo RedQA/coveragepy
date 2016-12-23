@@ -13,10 +13,8 @@ def method_for_cover():
         return "Hello Blue"
 
 from coverage import Coverage
-coverage = Coverage()
+coverage = Coverage(config_file="/Users/shaoyuliang/xiaohongshu/code/gitlab/coveragepy/lab/.coveragerc")
 coverage.start()
-from lab.submodule.submod import method_sub_module
-method_sub_module()
 method_for_cover()
 coverage.stop()
 coverage.save()
