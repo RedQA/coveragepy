@@ -174,9 +174,10 @@ if compile_extension:
                     "coverage/vendor/hiredis/read.c",
                     "coverage/vendor/hiredis/sds.c"
                 ],
-
                 # add redis include
-                include_dirs=["coverage/vendor/hiredis"]),
+                include_dirs=["coverage/vendor/hiredis"],
+                extra_objects=["/usr/local/Cellar/libevent/2.0.22/lib/libevent.a"]
+            ),
         ],
         cmdclass={
             'build_ext': ve_build_ext,

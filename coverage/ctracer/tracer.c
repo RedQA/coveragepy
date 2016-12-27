@@ -8,6 +8,10 @@
 #include "filedisp.h"
 #include "tracer.h"
 
+/* Add by Mark for asynchronized redis call */
+#include "async.h"
+#include "adapters/libevent.h"
+
 /* Python C API helpers. */
 
 static int
@@ -823,9 +827,9 @@ CTracer_handle_line(CTracer *self, PyFrameObject *frame)
                         strcat(sadd_command, filename);
                         strcat(sadd_command, " ");
                         strcat(sadd_command, co_line);
-                        redisReply *reply;
-                        reply = redisCommand(self->covRedis, sadd_command);
-                        freeReplyObject(reply);
+                        // make the call async, maybe loss something
+                        redisAsyncCommand(self->covRedis, NULL, NULL, sadd_command);
+                        event_base_dispatch(self->base);
                         memset(sadd_command, 0, sizeof(sadd_command));
                         memset(co_line, 0, sizeof(co_line));
 
@@ -1145,6 +1149,38 @@ done:
     return ret;
 }
 
+/* Callbacks for hiredis async */
+void getCallback(redisAsyncContext *c, void *r, void *privdata)
+{
+    redisReply *reply = r;
+    if (reply == NULL)
+        return;
+    printf("argv[%s]: %s\n", (char *)privdata, reply->str);
+
+    /* Disconnect after receiving the reply to GET */
+    redisAsyncDisconnect(c);
+}
+
+void connectCallback(const redisAsyncContext *c, int status)
+{
+    if (status != REDIS_OK)
+    {
+        printf("Error: %s\n", c->errstr);
+        return;
+    }
+    printf("Connected...\n");
+}
+
+void disconnectCallback(const redisAsyncContext *c, int status)
+{
+    if (status != REDIS_OK)
+    {
+        printf("Error: %s\n", c->errstr);
+        return;
+    }
+    printf("Disconnected...\n");
+}
+
 static PyObject *
 CTracer_start(CTracer *self, PyObject *args_unused)
 {
@@ -1166,15 +1202,26 @@ CTracer_start(CTracer *self, PyObject *args_unused)
     ascii = MyText_AS_BYTES(PyObject_GetAttrString(self->config, "xhs_redis_db"));
     redis_db = MyBytes_AS_STRING(ascii);
 
-    self->covRedis = redisConnect(redis_host, redis_port);
+    // User async redis client
+    signal(SIGPIPE, SIG_IGN);
+    self->base = event_base_new();
+
+    self->covRedis = redisAsyncConnect(redis_host, redis_port);
+    if (self->covRedis->err)
+    {
+        printf("Error: %s, Don't use the coverage this time \n", self->covRedis->err);
+        return (PyObject *)NULL;
+    }
+
+    redisLibeventAttach(self->covRedis, self->base);
+    redisAsyncSetConnectCallback(self->covRedis, connectCallback);
+    redisAsyncSetDisconnectCallback(self->covRedis, disconnectCallback);
 
     // switch to the right redis database
-
     char switch_db_cmd[11] = "SELECT ";
     strcat(switch_db_cmd, redis_db);
-    redisReply *reply;
-    reply = redisCommand(self->covRedis, switch_db_cmd);
-    freeReplyObject(reply);
+    redisAsyncCommand(self->covRedis, NULL, NULL, switch_db_cmd);
+    event_base_dispatch(self->base);
 
     PyEval_SetTrace((Py_tracefunc)CTracer_trace, (PyObject *)self);
     self->started = TRUE;

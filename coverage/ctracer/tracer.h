@@ -11,6 +11,7 @@
 
 #include "datastack.h"
 #include "hiredis.h"
+#include "async.h"
 
 /* The CTracer type. */
 
@@ -32,7 +33,8 @@ typedef struct CTracer {
     
     /* Add by Mark*/
     PyObject * config;
-    redisContext * covRedis;
+    redisAsyncContext * covRedis;
+    struct event_base *base;
     
     /* Has the tracer been started? */
     BOOL started;
